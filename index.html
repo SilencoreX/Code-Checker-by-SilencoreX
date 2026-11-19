@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeChecker  for Android</title>
+<meta name="description" content="CodeChecker finds syntax and compile errors in Java, JavaScript and Sketchware custom code and shows the exact line. Free Android app by Silencorex.">
+<meta name="theme-color" content="#F8F6F2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F8F6F2;
+  --ink:#241D33;
+  --muted:#6B6280;
+  --violet:#8B6BC4;
+  --deep:#55398F;
+  --btn:#6A4CA8;
+  --lilac:#E7DEF7;
+  --hair:rgba(85,57,143,.14);
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --body:"Instrument Sans","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font:400 1.0625rem/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+[hidden]{display:none!important}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--violet);outline-offset:3px;border-radius:10px}
+.wrap{width:min(1120px,calc(100% - 32px));margin-inline:auto}
+
+/* ---------- liquid background ---------- */
+.liquid{position:fixed;inset:0;z-index:-1;pointer-events:none;filter:url(#liquid);opacity:.85}
+.blob{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);border-radius:50%;background:var(--c);animation:drift var(--d) ease-in-out infinite alternate}
+.blob.follow{left:0;top:0;animation:none}
+@keyframes drift{
+  0%{transform:translate(0,0) scale(1)}
+  100%{transform:translate(var(--mx),var(--my)) scale(1.18)}
+}
+@media (max-width:720px){.liquid{filter:url(#goo)}}
+
+/* ---------- shared pieces ---------- */
+.glass{
+  background:linear-gradient(145deg,rgba(255,255,255,.80),rgba(255,255,255,.44));
+  -webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%);
+  border:1px solid rgba(255,255,255,.8);
+  box-shadow:0 34px 70px -34px rgba(85,57,143,.42),inset 0 2px 0 rgba(255,255,255,.95);
+}
+.btn{
+  --x:50%;--y:50%;
+  position:relative;isolation:isolate;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:.6rem;
+  min-height:54px;padding:0 1.7rem;border:0;border-radius:999px;cursor:pointer;text-decoration:none;
+  font:600 1.0625rem/1 var(--body);color:#fff;background:var(--btn);
+  box-shadow:0 18px 30px -16px rgba(85,57,143,.7),inset 0 1px 0 rgba(255,255,255,.35);
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease);
+}
+.btn::before{
+  content:"";position:absolute;z-index:-1;left:var(--x);top:var(--y);width:340px;height:340px;border-radius:50%;
+  background:radial-gradient(circle,#A98BDD 0%,#8B6BC4 60%,transparent 72%);
+  transform:translate(-50%,-50%) scale(0);transition:transform .7s var(--ease);
+}
+.btn:hover{transform:translateY(-2px)}
+.btn:hover::before{transform:translate(-50%,-50%) scale(1)}
+.btn:active{transform:translateY(0) scale(.98)}
+.btn svg{width:20px;height:20px;flex:none}
+.btn.small{min-height:42px;padding:0 1.2rem;font-size:.95rem}
+
+h1,h2{font-family:var(--display);font-weight:700;letter-spacing:-.035em;line-height:1.04}
+h2{font-size:clamp(2rem,4.6vw,3.2rem)}
+.sec{padding:clamp(64px,10vw,120px) 0}
+.lead{max-width:56ch;color:var(--muted);font-size:1.125rem}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;padding:20px 0}
+.brand{display:flex;align-items:center;gap:.7rem;text-decoration:none;font:700 1.2rem/1 var(--display);letter-spacing:-.02em}
+.mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#A98BDD,#7656B8);display:grid;place-items:center;box-shadow:0 10px 18px -10px rgba(85,57,143,.8),inset 0 1px 0 rgba(255,255,255,.4)}
+.mark svg{width:22px;height:22px}
+
+/* ---------- hero ---------- */
+.hero{display:grid;gap:clamp(32px,6vw,72px);align-items:center;padding:clamp(24px,5vw,64px) 0 clamp(48px,8vw,96px)}
+@media (min-width:920px){.hero{grid-template-columns:1.08fr .92fr}}
+h1{font-size:clamp(2.6rem,7vw,5.1rem);max-width:12ch}
+.hero .lead{margin-top:22px}
+.cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:32px}
+.cta-note{color:var(--muted);font-size:.95rem;max-width:24ch;line-height:1.4}
+.try{margin-top:44px}
+.try-label{font-weight:600;font-size:.95rem;margin-bottom:10px}
+.seg{position:relative;display:grid;grid-template-columns:repeat(3,1fr);max-width:470px;padding:5px;border-radius:999px}
+.seg button{position:relative;z-index:1;min-height:46px;padding:4px 8px;border:0;background:none;border-radius:999px;cursor:pointer;font:600 .92rem/1.15 var(--body);color:var(--muted);transition:color .3s}
+.seg button[aria-selected="true"]{color:#fff}
+.pill{position:absolute;z-index:0;top:5px;bottom:5px;left:5px;width:calc((100% - 10px)/3);border-radius:999px;background:var(--btn);box-shadow:0 10px 18px -10px rgba(85,57,143,.9);transition:transform .6s cubic-bezier(.3,1.35,.5,1)}
+
+/* load sequence: the page comes into focus like liquid settling */
+@media (prefers-reduced-motion:no-preference){
+  .focus-in{animation:focusIn 1.1s var(--ease) both;animation-delay:var(--dl,0s)}
+  @keyframes focusIn{from{opacity:0;filter:blur(14px);transform:scale(.985)}to{opacity:1;filter:blur(0);transform:none}}
+}
+
+/* ---------- phone demo ---------- */
+.stage{display:grid;place-items:center}
+.phone{position:relative;width:min(340px,100%);height:640px;border-radius:44px;padding:12px}
+.phone::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 60% at 15% 0%,rgba(255,255,255,.75),transparent 55%)}
+.screen{height:100%;border-radius:34px;background:#FAF7F2;border:1px solid #E3DAF0;padding:14px 13px 13px;display:grid;grid-template-rows:auto auto auto 1fr auto 168px;gap:9px;overflow:hidden;font-size:13px;line-height:1.4}
+.s-head{display:flex;justify-content:space-between;align-items:center}
+.s-head b{font:700 17px/1 var(--display);color:#5E4496;letter-spacing:-.02em}
+.s-head small{color:#5E4496;font-size:11px}
+.s-row{display:flex;gap:9px;align-items:center}
+.s-sel{flex:1;height:38px;border-radius:12px;background:#F1EBFA;border:1px solid #E6DDF5;display:flex;align-items:center;padding:0 11px;font-weight:700;font-size:13px}
+.s-sw{display:flex;align-items:center;gap:6px;font-size:12px;color:#5E4496}
+.s-sw i{width:34px;height:20px;border-radius:99px;background:#d9d2e6;position:relative}
+.s-sw i::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.s-warn{border-radius:12px;background:#FFF3DC;border:1px solid #F0D9A8;color:#8A5A00;font-size:10.5px;line-height:1.35;padding:8px 10px}
+.editor{border-radius:14px;background:#FFFEFB;border:1px solid #E3DAF0;overflow:auto;font:12px/1.65 var(--mono);padding:6px 0}
+.ln{display:flex;min-height:20px}
+.ln .no{flex:none;width:30px;text-align:right;padding-right:8px;margin-right:8px;color:#A99DC2;background:#F4EFFA;border-right:1px solid #E3DAF0;user-select:none}
+.ln .tx{white-space:pre;color:#2B2438}
+.ln.err{background:rgba(179,38,30,.13)}
+.c{color:#9A93A8}.s{color:#2E7D4F}.n{color:#C8631A}.k{color:#7B4FB3}.t{color:#3F6FB5}
+.s-btns{display:flex;gap:7px}
+.s-btns span{height:38px;border-radius:12px;display:grid;place-items:center;font-weight:600;font-size:12.5px}
+.s-btns .o{flex:1;border:1px solid #8B6BC4;color:#5E4496}
+.s-btns button{flex:2;height:38px;border:0;border-radius:12px;background:#8B6BC4;color:#fff;font:600 13px var(--body);cursor:pointer}
+.s-btns button:disabled{opacity:.7;cursor:progress}
+.res{position:relative;border-radius:14px;padding:11px 13px;overflow:auto}
+.res h4{font:700 15px/1.25 var(--body);margin-bottom:3px}
+.res p{font-size:12px}
+.res pre{font:11px/1.45 var(--mono);margin-top:7px;white-space:pre;overflow-x:auto}
+.res .warn{margin-top:7px;font-size:11px}
+.res.idle{background:transparent;border:1px dashed #D5C9EA;color:#6E6683;display:grid;place-items:center;text-align:center}
+.res.good{background:#E6F4EA;color:#1E6B35;border:1px solid rgba(30,107,53,.25)}
+.res.bad{background:#FDEBEC;color:#B3261E;border:1px solid rgba(179,38,30,.25)}
+.res.good,.res.bad{animation:pop .5s var(--ease)}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.spin{position:absolute;inset:auto 0 0;display:grid;place-items:center;height:168px;pointer-events:none}
+.spin i{width:30px;height:30px;border-radius:50%;border:3px solid #E6DDF5;border-top-color:#8B6BC4;animation:rot .8s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.res-wrap{position:relative}
+.demo-hint{margin-top:16px;text-align:center;color:var(--muted);font-size:.9rem}
+
+/* ---------- offline ---------- */
+.split{display:grid;gap:clamp(28px,5vw,64px)}
+@media (min-width:860px){.split{grid-template-columns:.9fr 1.1fr;align-items:start}}
+.vs{display:grid;gap:0}
+@media (min-width:560px){.vs{grid-template-columns:1fr 1fr}.vs>div+div{border-left:1px solid var(--hair);padding-left:32px}.vs>div:first-child{padding-right:32px}}
+@media (max-width:559px){.vs>div+div{border-top:1px solid var(--hair);margin-top:22px;padding-top:22px}}
+.vs h3{font:700 1.35rem/1.2 var(--display);letter-spacing:-.02em;margin-bottom:12px}
+.vs ul{list-style:none;display:grid;gap:10px}
+.vs li{padding-left:1.35rem;position:relative}
+.vs li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:8px;border-radius:50%;background:var(--violet)}
+
+/* ---------- about ---------- */
+.about{display:grid;gap:clamp(28px,5vw,72px)}
+@media (min-width:900px){.about{grid-template-columns:1fr 1fr}}
+.about p+p{margin-top:16px}
+.about .copy{margin-top:22px;display:grid;gap:0}
+.about .copy p{max-width:56ch}
+.spec{border-radius:28px;padding:10px 28px}
+.spec div{display:grid;grid-template-columns:9.5rem 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--hair)}
+.spec div:last-child{border-bottom:0}
+.spec dt{color:var(--muted)}
+.spec dd{font-weight:600}
+.dev{margin-top:clamp(36px,6vw,72px);padding-top:28px;border-top:1px solid var(--hair);display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 28px}
+.sig{font:800 clamp(2.6rem,9vw,5.6rem)/1 var(--display);letter-spacing:-.05em;background:linear-gradient(100deg,#55398F 10%,#8B6BC4 55%,#B79CEA 95%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dev p{color:var(--muted)}
+
+/* ---------- install ---------- */
+.steps{list-style:none;counter-reset:s;margin-top:34px;display:grid;gap:0;max-width:760px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:3.2rem 1fr;gap:10px;padding:22px 0;border-top:1px solid var(--hair)}
+.steps li:last-child{border-bottom:1px solid var(--hair)}
+.steps li::before{content:counter(s);font:700 2rem/1 var(--display);color:var(--violet)}
+.steps b{display:block;font-size:1.15rem}
+.steps span{color:var(--muted)}
+
+/* ---------- final ---------- */
+.final{border-radius:36px;padding:clamp(28px,5vw,56px);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:26px}
+.final h2{max-width:14ch}
+.final p{color:var(--muted);margin-top:10px}
+footer{padding:36px 0 48px;color:var(--muted);font-size:.95rem}
+
+@media (prefers-reduced-motion:reduce){
+  .blob{animation:none}
+  .btn,.btn::before,.pill{transition:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Liquid filters: wobble (turbulence displacement) + gooey merge -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="liquid" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.006 0.009" numOctaves="2" seed="4" result="n">
+        <animate attributeName="baseFrequency" dur="26s" values="0.006 0.009;0.011 0.006;0.006 0.009" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="80" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feGaussianBlur in="d" stdDeviation="18" result="b"/>
+      <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="g"/>
+      <feGaussianBlur in="g" stdDeviation="1.4"/>
+    </filter>
+    <filter id="goo" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b"/>
+      <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="liquid" aria-hidden="true">
+  <span class="blob" style="--c:#DCCFF4;--s:46vmax;--x:-12vmax;--y:-14vmax;--d:19s;--mx:10vw;--my:8vh"></span>
+  <span class="blob" style="--c:#EADFFA;--s:38vmax;--x:62vw;--y:-10vmax;--d:23s;--mx:-9vw;--my:12vh"></span>
+  <span class="blob" style="--c:#CDB9F0;--s:30vmax;--x:70vw;--y:52vh;--d:17s;--mx:-12vw;--my:-10vh"></span>
+  <span class="blob" style="--c:#F0E4FA;--s:34vmax;--x:-8vw;--y:60vh;--d:21s;--mx:12vw;--my:-8vh"></span>
+  <span class="blob follow" style="--c:#D3C0F3;--s:20vmax"></span>
+</div>
+
+<div class="wrap">
+  <header class="top focus-in">
+    <a class="brand" href="#top" aria-label="CodeChecker home">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5"/><path d="M16 7l5 5-5 5"/><path d="M13.5 5l-3 14" stroke="#FAF7F2"/></svg>
+      </span>
+      CodeChecker
+    </a>
+    <a class="btn small" data-dl href="CodeChecker-v2.0.apk" download>Download</a>
+  </header>
+
+  <main id="top">
+    <!-- ================= HERO ================= -->
+    <section class="hero" aria-labelledby="h1">
+      <div>
+        <h1 id="h1" class="focus-in" style="--dl:.1s">Find the error before your app does.</h1>
+        <p class="lead focus-in" style="--dl:.25s">CodeChecker reads Java, JavaScript and Sketchware custom code and shows the exact line that won&rsquo;t compile.</p>
+        <div class="cta-row focus-in" style="--dl:.4s">
+          <a class="btn" data-dl href="CodeChecker-v2.0.apk" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+            Download APK
+          </a>
+          <p class="cta-note">Version 2.0. Free for Android 8.0 and newer.</p>
+        </div>
+
+        <div class="try focus-in" style="--dl:.55s">
+          <p class="try-label" id="try-label">Try it on a sample</p>
+          <div class="seg glass" role="tablist" aria-labelledby="try-label">
+            <span class="pill" id="pill" aria-hidden="true"></span>
+            <button role="tab" aria-selected="true" data-mode="java">Java</button>
+            <button role="tab" aria-selected="false" data-mode="js">JavaScript</button>
+            <button role="tab" aria-selected="false" data-mode="sw">Sketchware (Java)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage focus-in" style="--dl:.35s">
+        <div>
+          <div class="phone glass">
+            <div class="screen">
+              <div class="s-head"><b>CodeChecker</b><small>&#9881; Settings</small></div>
+              <div class="s-row">
+                <div class="s-sel" id="sel">Java</div>
+                <div class="s-sw"><i></i>Offline</div>
+              </div>
+              <div class="s-warn" id="warn" hidden>&#9888; Sketchware&rsquo;s internal references (components, _data, Android classes) can&rsquo;t be validated here.</div>
+              <div class="editor" id="code" aria-label="Sample code"></div>
+              <div class="s-btns"><span class="o">Paste</span><span class="o">Clear</span><button id="check" type="button">Check Code</button></div>
+              <div class="res-wrap">
+                <div class="res idle" id="result" aria-live="polite"></div>
+                <div class="spin" id="spin" hidden><i></i></div>
+              </div>
+            </div>
+          </div>
+          <p class="demo-hint">Tap Check Code in the phone. Tap again to fix the error.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= OFFLINE ================= -->
+    <section class="sec" aria-labelledby="off">
+      <div class="split">
+        <div>
+          <h2 id="off">Works without internet</h2>
+          <p class="lead" style="margin-top:18px">Switch on Offline in the app and CodeChecker checks syntax on your phone. Switch it off to compile in the cloud and catch the errors a syntax check can&rsquo;t.</p>
+        </div>
+        <div class="vs">
+          <div>
+            <h3>Offline</h3>
+            <ul>
+              <li>Finds syntax errors with line numbers</li>
+              <li>Java and JavaScript, no connection needed</li>
+              <li>Your code never leaves the phone</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Online</h3>
+            <ul>
+              <li>Full compile with javac and Node.js</li>
+              <li>Catches type errors and wrong method calls</li>
+              <li>Needs internet, and says so when it&rsquo;s missing</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ABOUT ================= -->
+    <section class="sec" id="about" aria-labelledby="ab">
+      <div class="about">
+        <div>
+          <h2 id="ab">About CodeChecker</h2>
+          <div class="copy">
+            <p>CodeChecker is a small Android app for people who write code on their phone. Paste Java, JavaScript or a Sketchware custom code block, tap Check Code, and you get a green &ldquo;Code is valid&rdquo; or the exact error with its line number.</p>
+            <p>The editor has line numbers, syntax colours and a highlighted error line, in a calm off-white and violet theme.</p>
+            <p>Sketchware mode wraps your snippet so a real Java compiler can read it. Things that only exist inside Sketchware, like component names and Android classes, can&rsquo;t be validated. They are listed as not verified instead of being reported as errors.</p>
+          </div>
+        </div>
+        <dl class="spec glass">
+          <div><dt>App</dt><dd>CodeChecker</dd></div>
+          <div><dt>Version</dt><dd>2.0</dd></div>
+          <div><dt>Developer</dt><dd>Silencorex (Sufiyan)</dd></div>
+          <div><dt>Platform</dt><dd>Android 8.0 and newer</dd></div>
+          <div><dt>Modes</dt><dd>Java, JavaScript, Sketchware (Java)</dd></div>
+          <div><dt>Internet</dt><dd>Optional. Only the cloud check needs it.</dd></div>
+          <div><dt>Price</dt><dd>Free</dd></div>
+        </dl>
+      </div>
+      <div class="dev">
+        <span class="sig">Silencorex</span>
+        <p>Developed by Sufiyan.</p>
+      </div>
+    </section>
+
+    <!-- ================= INSTALL ================= -->
+    <section class="sec" aria-labelledby="ins">
+      <h2 id="ins">Install in three steps</h2>
+      <ol class="steps">
+        <li><div><b>Download the APK</b><span>Tap Download APK. It&rsquo;s a file called CodeChecker-v2.0.apk.</span></div></li>
+        <li><div><b>Allow the install</b><span>Open the file. When Android asks, allow installs from your browser or file manager.</span></div></li>
+        <li><div><b>Open CodeChecker</b><span>Pick a mode, paste your code and tap Check Code.</span></div></li>
+      </ol>
+    </section>
+
+    <!-- ================= FINAL ================= -->
+    <section class="sec" style="padding-top:0" aria-labelledby="fin">
+      <div class="final glass">
+        <div>
+          <h2 id="fin">Get CodeChecker 2.0</h2>
+          <p>Free. No sign-up.</p>
+        </div>
+        <a class="btn" data-dl href="CodeChecker-v2.0.apk" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+          Download APK
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer>&copy; 2026 Silencorex. Developed by Sufiyan. CodeChecker version 2.0.</footer>
+</div>
+
+<script>
+(function(){
+  /* Put your hosted APK link here (or keep the file next to this page). */
+  var APK_URL = "CodeChecker-v2.0.apk";
+
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.querySelectorAll("[data-dl]").forEach(function(a){ a.setAttribute("href", APK_URL); });
+  if (reduce) document.querySelectorAll("svg").forEach(function(s){ if (s.pauseAnimations) s.pauseAnimations(); });
+
+  /* liquid fill on buttons follows the pointer */
+  document.querySelectorAll(".btn").forEach(function(b){
+    b.addEventListener("pointermove", function(e){
+      var r = b.getBoundingClientRect();
+      b.style.setProperty("--x", (e.clientX - r.left) + "px");
+      b.style.setProperty("--y", (e.clientY - r.top) + "px");
+    });
+  });
+
+  /* one blob trails the pointer and merges with the others */
+  var fb = document.querySelector(".blob.follow");
+  var tx = innerWidth * .6, ty = innerHeight * .4, cx = tx, cy = ty;
+  if (fb && !reduce) {
+    addEventListener("pointermove", function(e){ tx = e.clientX; ty = e.clientY; }, {passive:true});
+    (function loop(){
+      cx += (tx - cx) * .06; cy += (ty - cy) * .06;
+      fb.style.transform = "translate3d(" + cx + "px," + cy + "px,0) translate(-50%,-50%)";
+      requestAnimationFrame(loop);
+    })();
+  } else if (fb) { fb.style.transform = "translate3d(60vw,40vh,0)"; }
+
+  /* ---------- phone demo ---------- */
+  var M = {
+    java: {
+      name: "Java", idx: 0, sw: false,
+      broken: ["public class Main {", "    public static void main(String[] args) {", "        int qty = 4", "        int total = 250 * qty;", "    }", "}"],
+      fixed:  ["public class Main {", "    public static void main(String[] args) {", "        int qty = 4;", "        int total = 250 * qty;", "    }", "}"],
+      err: { line: 3, msg: "';' expected", col: "end" },
+      ok: "Compiled successfully with javac.", warn: ""
+    },
+    js: {
+      name: "JavaScript", idx: 1, sw: false,
+      broken: ["const items = [1, 2, 3];", "const sum = items.reduce((a, b) => a + b, 0;", "console.log(sum);"],
+      fixed:  ["const items = [1, 2, 3];", "const sum = items.reduce((a, b) => a + b, 0);", "console.log(sum);"],
+      err: { line: 2, msg: "SyntaxError: missing ) after argument list", col: ";" },
+      ok: "No syntax errors found (Node.js).", warn: ""
+    },
+    sw: {
+      name: "Sketchware (Java)", idx: 2, sw: true,
+      broken: ["textview1.setText(\"Saved\");", "Toast.makeText(this, \"Done\", Toast.LENGTH_SHORT.show();"],
+      fixed:  ["textview1.setText(\"Saved\");", "Toast.makeText(this, \"Done\", Toast.LENGTH_SHORT).show();"],
+      err: { line: 2, msg: "')' or ',' expected", col: ";" },
+      ok: "Syntax and compile check passed.", warn: "Toast (variable), textview1 (variable)"
+    }
+  };
+
+  var KW = new Set("int long double boolean void new return class public private static final if else for while const let var function true false null this import".split(" "));
+  var TOK = /(\/\/.*)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|(\b\d+(?:\.\d+)?\b)|([A-Za-z_$][\w$]*)/g;
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function hl(line){
+    var out = "", last = 0, m; TOK.lastIndex = 0;
+    while ((m = TOK.exec(line))) {
+      out += esc(line.slice(last, m.index));
+      var t = m[0], c = "";
+      if (m[1]) c = "c"; else if (m[2]) c = "s"; else if (m[3]) c = "n";
+      else if (KW.has(t)) c = "k"; else if (/^[A-Z]/.test(t)) c = "t";
+      out += c ? '<span class="' + c + '">' + esc(t) + '</span>' : esc(t);
+      last = m.index + t.length;
+    }
+    return out + esc(line.slice(last));
+  }
+
+  var $ = function(id){ return document.getElementById(id); };
+  var codeEl = $("code"), resEl = $("result"), spin = $("spin"), btn = $("check");
+  var warnEl = $("warn"), selEl = $("sel"), pill = $("pill");
+  var mode = "java", step = 0, busy = false, touched = false;
+
+  function renderCode(){
+    var m = M[mode], lines = step === 2 ? m.fixed : m.broken, bad = step === 1 ? m.err.line : -1;
+    codeEl.innerHTML = lines.map(function(l, i){
+      return '<div class="ln' + (i + 1 === bad ? " err" : "") + '"><span class="no">' + (i + 1) + '</span><span class="tx">' + (hl(l) || " ") + '</span></div>';
+    }).join("");
+  }
+  function renderResult(){
+    var m = M[mode];
+    if (step === 0) {
+      resEl.className = "res idle";
+      resEl.innerHTML = "<p>Tap <b>Check Code</b> to see the result.</p>";
+    } else if (step === 1) {
+      var src = m.broken[m.err.line - 1];
+      var col = m.err.col === "end" ? src.length : src.lastIndexOf(m.err.col);
+      var detail = src.trim() + "\n" + " ".repeat(Math.max(0, col - (src.length - src.trimStart().length))) + "^";
+      resEl.className = "res bad";
+      resEl.innerHTML = "<h4>1 error found \u274C</h4><p><b>Line " + m.err.line + ": " + esc(m.err.msg) + "</b></p><pre>" + esc(detail) + "</pre>";
+    } else {
+      resEl.className = "res good";
+      resEl.innerHTML = "<h4>Code is valid \u2705</h4><p>" + esc(m.ok) + "</p>" + (m.warn ? '<p class="warn"><b>Not verified:</b> ' + esc(m.warn) + "</p>" : "");
+    }
+  }
+  function renderAll(){
+    var m = M[mode];
+    selEl.textContent = m.name;
+    warnEl.hidden = !m.sw;
+    pill.style.transform = "translateX(" + (m.idx * 100) + "%)";
+    renderCode(); renderResult();
+  }
+  function run(){
+    if (busy) return;
+    busy = true; btn.disabled = true; btn.textContent = "Checking\u2026";
+    resEl.hidden = true; spin.hidden = false;
+    setTimeout(function(){
+      step = (step + 1) % 3;
+      renderCode(); renderResult();
+      resEl.hidden = false; spin.hidden = true;
+      btn.disabled = false; btn.textContent = "Check Code"; busy = false;
+    }, 750);
+  }
+
+  btn.addEventListener("click", function(){ touched = true; run(); });
+  document.querySelectorAll(".seg button").forEach(function(b){
+    b.addEventListener("click", function(){
+      touched = true; mode = b.dataset.mode; step = 0;
+      document.querySelectorAll(".seg button").forEach(function(o){ o.setAttribute("aria-selected", o === b ? "true" : "false"); });
+      renderAll();
+    });
+  });
+
+  renderAll();
+  /* the one orchestrated moment: the demo runs its first check by itself */
+  if (!reduce) setTimeout(function(){ if (!touched) run(); }, 2800);
+})();
+</script>
+</body>
+</html>
